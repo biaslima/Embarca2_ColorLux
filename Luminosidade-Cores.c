@@ -6,6 +6,7 @@
 #include "lib/ssd1306.h"
 #include "lib/sensores.h"
 #include "lib/font.h" 
+#include "lib/ws2812b.h"
 
 // Pins
 #define botaoB 6
@@ -41,6 +42,10 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
 }
 
 int main() {
+    ws2812b_t *ws = NULL;
+
+    ws = init_ws2812b(pio0, WS2812B_PIN); // Matriz de LEDs WS2812B
+
     // --- BOOTSEL Setup ---
     gpio_init(botaoB);
     gpio_set_dir(botaoB, GPIO_IN);
@@ -125,20 +130,23 @@ int main() {
             gpio_put(RED_PIN, 1);
             gpio_put(GREEN_PIN, 0);
             gpio_put(BLUE_PIN, 0);
+            ws2812b_draw(ws, ZERO_GLYPH, RED, 1);
         } else if (led_state == 1) {
             gpio_put(RED_PIN, 1);
             gpio_put(GREEN_PIN, 1);
             gpio_put(BLUE_PIN, 0);
+            ws2812b_draw(ws, ZERO_GLYPH, YELLOW, 1);
         } else if (led_state == 2) {
             gpio_put(RED_PIN, 0);
             gpio_put(GREEN_PIN, 1);
             gpio_put(BLUE_PIN, 0);
+            ws2812b_draw(ws, ZERO_GLYPH, GREEN, 1);
         } else {
             gpio_put(RED_PIN, 0);
             gpio_put(GREEN_PIN, 0);
             gpio_put(BLUE_PIN, 1);
+            ws2812b_draw(ws, ZERO_GLYPH, BLUE, 1);
         }
-
         sleep_ms(500);
     }
     return 0;
