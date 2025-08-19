@@ -65,6 +65,7 @@ target_include_directories(Luminosidade-Cores PRIVATE
 target_link_libraries(Luminosidade-Cores 
         hardware_pio
         hardware_clocks
+        hardware_pwm
         )
 
 pico_add_extra_outputs(Luminosidade-Cores)

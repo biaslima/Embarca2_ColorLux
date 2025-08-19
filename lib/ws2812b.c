@@ -5,12 +5,10 @@
 
 /**
  * @brief Inverte horizontalmente a matriz 5x5 de LEDs.
- * 
- * @param matrix Ponteiro para a matriz de LEDs representada como um array de 25 elementos.
- * 
- * @note Esta operação é necessária para ajustar a orientação do padrão de LEDs
- *       quando exibido na matriz. A inversão ocorre em pares de elementos em posições
- *       simétricas em relação ao eixo central vertical.
+ * * @param matrix Ponteiro para a matriz de LEDs representada como um array de 25 elementos.
+ * * @note Esta operação é necessária para ajustar a orientação do padrão de LEDs
+ * quando exibido na matriz. A inversão ocorre em pares de elementos em posições
+ * simétricas em relação ao eixo central vertical.
  */
 static void fliplr(uint8_t *matrix) {
     uint8_t temp;
@@ -37,11 +35,9 @@ static void fliplr(uint8_t *matrix) {
 
 /**
  * @brief Compoe o valor do LED com base na cor e intensidade fornecida.
- * 
- * Esta função calcula o valor do LED para ser enviado ao controlador WS2812B. A intensidade é convertida para um valor entre 0 e 255 com base na porcentagem fornecida.
+ * * Esta função calcula o valor do LED para ser enviado ao controlador WS2812B. A intensidade é convertida para um valor entre 0 e 255 com base na porcentagem fornecida.
  * O valor final depende da cor especificada (vermelho, verde, azul, etc.) e é retornado como um valor composto.
- * 
- * @param color Cor do LED (vermelho, verde, azul, amarelo, roxo, branco ou azul-marinho).
+ * * @param color Cor do LED (vermelho, verde, azul, amarelo, roxo, branco ou azul-marinho).
  * @param intensity Intensidade do LED em porcentagem (0-100).
  * @return uint32_t Valor composto do LED.
  */
@@ -87,11 +83,9 @@ static uint32_t ws2812b_compose_led_value(uint8_t color, uint8_t intensity)
 
 /**
  * @brief Desenha a matriz de LEDs (glyph) com base nas cores e intensidade fornecidas.
- * 
- * Esta função percorre a matriz de LEDs (glyph) e envia os dados para o controlador WS2812B. 
+ * * Esta função percorre a matriz de LEDs (glyph) e envia os dados para o controlador WS2812B. 
  * O valor de cada LED é calculado usando a cor e intensidade fornecidas. A matriz é percorrida de trás para frente.
- * 
- * @param ws Ponteiro para o controlador WS2812B.
+ * * @param ws Ponteiro para o controlador WS2812B.
  * @param glyph Matriz de 25 elementos (5x5) que representa o padrão de LEDs a ser exibido.
  * @param color Cor do LED (vermelho, verde, azul, etc.).
  * @param intensity Intensidade do LED (0-100%).
@@ -113,11 +107,32 @@ void ws2812b_draw(const ws2812b_t *ws, const uint8_t *glyph, const uint8_t color
 }
 
 /**
+ * @brief Desenha a matriz de LEDs com base em valores RGB diretos, convertendo para o formato GRB.
+ */
+void ws2812b_draw_rgb(const ws2812b_t *ws, const uint8_t *glyph, uint8_t r, uint8_t g, uint8_t b)
+{
+    // IMPORTANTE: O controlador WS2812B espera os dados de cor na ordem GRB (Green, Red, Blue).
+    // Esta linha de código monta o valor de 24 bits na ordem correta:
+    // - O valor de Verde (g) é deslocado 24 bits para a esquerda.
+    // - O valor de Vermelho (r) é deslocado 16 bits.
+    // - O valor de Azul (b) é deslocado 8 bits.
+    uint32_t composite_value = ((uint32_t)(g) << 24) |
+                               ((uint32_t)(r) << 16) |
+                               ((uint32_t)(b) << 8);
+
+    for(int i = 0; i < 25; i++) {
+        if(glyph[24-i] == 1) {
+            send_ws2812b_data(ws->pio, ws->state_machine_id, composite_value);
+        } else {
+            send_ws2812b_data(ws->pio, ws->state_machine_id, 0);
+        }
+    }
+}
+
+/**
  * @brief Apaga todos os LEDs da matriz (configura todos os LEDs como 0).
- * 
- * Esta função desliga todos os LEDs da matriz WS2812B enviando o valor 0 para cada um.
- * 
- * @param ws Ponteiro para o controlador WS2812B.
+ * * Esta função desliga todos os LEDs da matriz WS2812B enviando o valor 0 para cada um.
+ * * @param ws Ponteiro para o controlador WS2812B.
  */
 void ws2812b_turn_off_all(const ws2812b_t *ws)
 {
@@ -128,10 +143,8 @@ void ws2812b_turn_off_all(const ws2812b_t *ws)
 
 /**
  * @brief Envia os dados para a máquina de estado (state machine) do PIO, acionando os LEDs.
- * 
- * Esta função envia o valor composto de dados para a PIO do Raspberry Pi Pico, controlando a saída dos LEDs.
- * 
- * @param pio Ponteiro para o PIO.
+ * * Esta função envia o valor composto de dados para a PIO do Raspberry Pi Pico, controlando a saída dos LEDs.
+ * * @param pio Ponteiro para o PIO.
  * @param sm Número da máquina de estado (state machine).
  * @param data Dados a serem enviados para os LEDs.
  */
@@ -142,10 +155,8 @@ void send_ws2812b_data(PIO pio, uint sm, uint32_t data)
 
 /**
  * @brief Inicializa o controlador WS2812B e configura o PIO (Programmable Input/Output).
- * 
- * Esta função inicializa a configuração do PIO para controlar o WS2812B, incluindo a definição de pinos, configuração de clock e a máquina de estado do PIO.
- * 
- * @param pio Ponteiro para o PIO a ser utilizado.
+ * * Esta função inicializa a configuração do PIO para controlar o WS2812B, incluindo a definição de pinos, configuração de clock e a máquina de estado do PIO.
+ * * @param pio Ponteiro para o PIO a ser utilizado.
  * @param pin Pino GPIO conectado ao LED WS2812B.
  * @return Ponteiro para o controlador WS2812B inicializado.
  */
@@ -189,10 +200,8 @@ ws2812b_t *init_ws2812b(PIO pio, uint8_t pin)
 
 /**
  * @brief Prepara o "glyph" (matriz de LEDs) invertendo horizontalmente.
- * 
- * Esta função chama a função `fliplr` para inverter a matriz de LEDs horizontalmente.
- * 
- * @param glyph Matriz de LEDs a ser invertida.
+ * * Esta função chama a função `fliplr` para inverter a matriz de LEDs horizontalmente.
+ * * @param glyph Matriz de LEDs a ser invertida.
  */
 void prepare_glyph(uint8_t *glyph)
 {
@@ -201,10 +210,8 @@ void prepare_glyph(uint8_t *glyph)
 
 /**
  * @brief Desenha a matriz de LEDs no pino 0 do PIO0 com a cor e intensidade fornecidas.
- * 
- * Esta função percorre a matriz de LEDs (glyph) e envia os dados para o controlador WS2812B.
- * 
- * @param glyph Matriz de 25 elementos (5x5) que representa o padrão de LEDs a ser exibido.
+ * * Esta função percorre a matriz de LEDs (glyph) e envia os dados para o controlador WS2812B.
+ * * @param glyph Matriz de 25 elementos (5x5) que representa o padrão de LEDs a ser exibido.
  * @param color Cor do LED (vermelho, verde, azul, etc.).
  * @param intensity Intensidade do LED (0-100%).
  */
