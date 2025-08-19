@@ -38,13 +38,14 @@ pico_sdk_init()
 add_executable(Luminosidade-Cores Luminosidade-Cores.c 
     lib/ssd1306.c
     lib/sensores.c
+    lib/ws2812b.c
     )
 
 pico_set_program_name(Luminosidade-Cores "Luminosidade-Cores")
 pico_set_program_version(Luminosidade-Cores "0.1")
 
 # Generate PIO header
-pico_generate_pio_header(Luminosidade-Cores ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(Luminosidade-Cores ${CMAKE_CURRENT_LIST_DIR}/ws2812b.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/generated)
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(Luminosidade-Cores 0)
@@ -63,7 +64,7 @@ target_include_directories(Luminosidade-Cores PRIVATE
 # Add any user requested libraries
 target_link_libraries(Luminosidade-Cores 
         hardware_pio
-        
+        hardware_clocks
         )
 
 pico_add_extra_outputs(Luminosidade-Cores)
