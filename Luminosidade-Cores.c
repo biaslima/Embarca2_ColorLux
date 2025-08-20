@@ -24,6 +24,15 @@ const uint BLUE_PIN = 12;
 #define I2C_SCL_DISP 15
 #define DISPLAY_ADDR 0x3C
 
+// --- Buzzer ---
+// Constantes para configuração do buzzer por PWM
+// Frequência de aproximadamente 440 Hz
+const uint BUZZER_PIN = 21;
+const uint16_t PERIOD = 59609; // WRAP
+const float DIVCLK = 16.0; // Divisor inteiro
+static uint slice_21;
+const uint16_t dc_values[] = {PERIOD * 0.3, 0}; // Duty Cycle de 30% e 0%
+
 // --- Funções Auxiliares ---
 
 // Função para configurar um pino para PWM
@@ -41,6 +50,16 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
     if (gpio == BTN_BOOTSEL_PIN) {
         reset_usb_boot(0, 0);
     }
+}
+
+// Inicializa o buzzer com as configurações de PWM
+void init_buzzer(uint gpio_pin, float clkdiv, uint16_t period) {
+    gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
+    uint slice = pwm_gpio_to_slice_num(gpio_pin);
+    pwm_set_clkdiv(slice, clkdiv);
+    pwm_set_wrap(slice, period);
+    pwm_set_gpio_level(gpio_pin, 0); // Inicia desligado
+    pwm_set_enabled(slice, true);
 }
 
 // --- Função Principal ---
@@ -75,6 +94,9 @@ int main() {
     ssd1306_config(&ssd);
     ssd1306_fill(&ssd, false);                                              
     ssd1306_send_data(&ssd);   
+
+    // --- Buzzer ---
+    init_buzzer(BUZZER_PIN, DIVCLK, PERIOD);
 
     // --- Sensores ---
     bh1750_power_on();
@@ -133,6 +155,13 @@ int main() {
         // 5. Atualiza a matriz de LEDs WS2812B com a nova função
         // Passa os valores de cor e intensidade diretamente
         ws2812b_draw_rgb(ws, ZERO_GLYPH, final_r, final_g, final_b);
+
+        // 6. Emite o alerta do buzzer, caso a luminosidade esteja muito baixa ou a cor vermelha seja identificada em maior parte
+        if(lux < 1 || (r > g && r > b))
+            pwm_set_gpio_level(BUZZER_PIN, dc_values[0]);
+        
+        else
+            pwm_set_gpio_level(BUZZER_PIN, dc_values[1]);
         
         // --- Atualização do Display ---
         sprintf(str_red, "R:%d", r);
@@ -148,7 +177,6 @@ int main() {
         ssd1306_draw_string(&ssd, str_blue, 14, 50);
         ssd1306_draw_string(&ssd, str_lux, 60, 40);
         ssd1306_send_data(&ssd);
-
         sleep_ms(250); // Reduz o delay para uma resposta mais rápida
     }
     return 0;
